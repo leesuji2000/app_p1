@@ -5,60 +5,101 @@ import { LineChart } from 'react-native-chart-kit';
 import { Path, Circle } from 'react-native-svg';
 
 export default function App() {
-  const [{ x, y, z }, setData] = useState({ x: 0, y: 0, z: 0 });
-  const [subscription, setSubscription] = useState(null);
-  const [gyroData, setGyroData] = useState([]);
+  const [gyroData, setGyroData] = useState({ x: [], y: [], z: [] });
   const [showGraph, setShowGraph] = useState(false);
 
   const _subscribe = () => {
-    setSubscription(
-      Gyroscope.addListener(gyroscopeData => {
-        setData(gyroscopeData);
-        setGyroData(prevData => [...prevData, gyroscopeData]);
-      })
-    );
+    const subscription = Gyroscope.addListener(gyroscopeData => {
+      setGyroData(prevData => {
+        return {
+          x: [...prevData.x, gyroscopeData.x],
+          y: [...prevData.y, gyroscopeData.y],
+          z: [...prevData.z, gyroscopeData.z],
+        };
+      });
+    });
+    return subscription;
   };
 
-  const _unsubscribe = () => {
+  const _unsubscribe = subscription => {
     subscription && subscription.remove();
-    setSubscription(null);
   };
 
   useEffect(() => {
+    let subscription;
+
     if (showGraph) {
-      _subscribe();
-    } else {
-      _unsubscribe();
+      subscription = _subscribe();
     }
-    return () => _unsubscribe();
+
+    return () => _unsubscribe(subscription);
   }, [showGraph]);
 
   const renderGraph = () => {
     if (showGraph) {
       return (
-        <LineChart
-          data={{
-            labels: gyroData.map((_, index) => index.toString()),
-            datasets: [{ data: gyroData.map(data => data.x) }],
-          }}
-          width={300}
-          height={200}
-          chartConfig={{
-            backgroundGradientFrom: '#ffffff',
-            backgroundGradientTo: '#ffffff',
-            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-          }}
-          withShadow={false}
-          withVerticalLines={false}
-          withHorizontalLines={false}
-          withDots={false}
-          withInnerLines={false}
-          bezier
-          renderDecorator={Circle}
-          onDataPointClick={({ index }) => {
-            // Handle data point click if needed
-          }}
-        />
+        <View>
+          <LineChart
+            data={{
+              labels: Array.from({ length: gyroData.x.length }, (_, i) => i.toString()),
+              datasets: [{ data: gyroData.x, color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})` }],
+            }}
+            width={300}
+            height={200}
+            chartConfig={{
+              backgroundGradientFrom: '#ffffff',
+              backgroundGradientTo: '#ffffff',
+              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            }}
+            withShadow={false}
+            withVerticalLines={false}
+            withHorizontalLines={false}
+            withDots={false}
+            withInnerLines={false}
+            bezier
+            renderDecorator={Circle}
+          />
+          <LineChart
+            data={{
+              labels: Array.from({ length: gyroData.y.length }, (_, i) => i.toString()),
+              datasets: [{ data: gyroData.y, color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})` }],
+            }}
+            width={300}
+            height={200}
+            chartConfig={{
+              backgroundGradientFrom: '#ffffff',
+              backgroundGradientTo: '#ffffff',
+              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            }}
+            withShadow={false}
+            withVerticalLines={false}
+            withHorizontalLines={false}
+            withDots={false}
+            withInnerLines={false}
+            bezier
+            renderDecorator={Circle}
+          />
+          <LineChart
+            data={{
+              labels: Array.from({ length: gyroData.z.length }, (_, i) => i.toString()),
+              datasets: [{ data: gyroData.z, color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})` }],
+            }}
+            width={300}
+            height={200}
+            chartConfig={{
+              backgroundGradientFrom: '#ffffff',
+              backgroundGradientTo: '#ffffff',
+              color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+            }}
+            withShadow={false}
+            withVerticalLines={false}
+            withHorizontalLines={false}
+            withDots={false}
+            withInnerLines={false}
+            bezier
+            renderDecorator={Circle}
+          />
+        </View>
       );
     } else {
       return null;
@@ -68,9 +109,6 @@ export default function App() {
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text>Gyroscope:</Text>
-      <Text>x: {x}</Text>
-      <Text>y: {y}</Text>
-      <Text>z: {z}</Text>
       <TouchableOpacity onPress={() => setShowGraph(!showGraph)}>
         <Text>{showGraph ? 'Hide Graph' : 'Show Graph'}</Text>
       </TouchableOpacity>
