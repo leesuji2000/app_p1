@@ -9,18 +9,18 @@ export default function App() {
   const [showGraph, setShowGraph] = useState(false);
 
   const _subscribe = () => {
-    const subscription = Gyroscope.addListener(gyroscopeData => {
-      setGyroData(prevData => {
-        return {
-          x: [...prevData.x, gyroscopeData.x],
-          y: [...prevData.y, gyroscopeData.y],
-          z: [...prevData.z, gyroscopeData.z],
-        };
+    return setInterval(() => {
+      Gyroscope.addListener(gyroscopeData => {
+        setGyroData(prevData => {
+          return {
+            x: [...prevData.x, gyroscopeData.x],
+            y: [...prevData.y, gyroscopeData.y],
+            z: [...prevData.z, gyroscopeData.z],
+          };
+        });
       });
-    });
-    return subscription;
+    }, 1000); // 0.1초(100ms)마다 Gyroscope 데이터 업데이트
   };
-
   const _unsubscribe = subscription => {
     subscription && subscription.remove();
   };
@@ -116,3 +116,4 @@ export default function App() {
     </View>
   );
 }
+
