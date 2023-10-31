@@ -1,18 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Gyroscope } from 'expo-sensors';
 import { LineChart } from 'react-native-chart-kit';
 import { Path, Circle } from 'react-native-svg';
+import { PinchGestureHandler, State } from 'react-native-gesture-handler';
+
+const MAX_DATA_POINTS = 50; // 최대 데이터 포인트 수
 
 export default function App() {
   const [gyroData, setGyroData] = useState({ x: [], y: [], z: [] });
   const [showGraph, setShowGraph] = useState(false);
+  const [pinchActive, setPinchActive] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+
 
   const _subscribe = () => {
     return setInterval(() => {
       Gyroscope.addListener(gyroscopeData => {
         setGyroData(prevData => {
+          if (prevData.x.length >= MAX_DATA_POINTS) {
+            prevData.x.shift();
+            prevData.y.shift();
+            prevData.z.shift();
+          }
           return {
+            
             x: [...prevData.x, gyroscopeData.x],
             y: [...prevData.y, gyroscopeData.y],
             z: [...prevData.z, gyroscopeData.z],
@@ -30,14 +42,25 @@ export default function App() {
 
     if (showGraph) {
       subscription = _subscribe();
+    } else {
+      _unsubscribe(subscription);
+      setGyroData({ x: [], y: [], z: [] });
     }
 
     return () => _unsubscribe(subscription);
   }, [showGraph]);
 
+  const onPinchGestureEvent = event => {
+    if (event.nativeEvent.state === State.ACTIVE) {
+      setZoomLevel(event.nativeEvent.scale);
+    }
+  };
+
+
   const renderGraph = () => {
     if (showGraph) {
       return (
+        
         <View>
           <LineChart
             data={{
